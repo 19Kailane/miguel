@@ -16,6 +16,9 @@ export default function TecnologiasPage() {
               title={tecnologia.title}
               image={tecnologia.image}
               
+
+
+              
             />
           ))
         ) : (
