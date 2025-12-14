@@ -41,4 +41,5 @@ export interface Produto {
     description : string
     category :string
     rating: number
+    media: string
 }
