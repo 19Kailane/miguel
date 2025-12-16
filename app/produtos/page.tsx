@@ -5,9 +5,11 @@ import useSWR from "swr"
 import ProdutoCard from "@/Componente/ProdutoCard/ProdutoCard"
 import { Produto } from "@/models/interfaces"
 
+const fetcher = (url: string) => fetch(url).then((res) => res.json());
+
+
 export default function Produtospage() {
 
-  // ✅ AGORA está correto
   const [search, setSearch] = useState("")
   const [sortOption, setSortOption] = useState("")
   const [filteredData, setFilteredData] = useState<Produto[]>([])
@@ -23,64 +25,77 @@ export default function Produtospage() {
     fetcher
   );
 
+const [cart, setCart] = useState<Produto[]>([]);
+
+
   useEffect(() => {
-    if (!data) return
 
-    let filtered = data.filter((product) =>
-      product.title.toLowerCase().includes(search.toLowerCase())
-    )
+   const storedCart = localStorage.getItem("cart");
+    if (storedCart) setCart(JSON.parse(storedCart));
+   }, []);
 
-    switch (sortOption) {
-      case "name-asc":
-        filtered.sort((a, b) => a.title.localeCompare(b.title))
-        break
-      case "name-desc":
-        filtered.sort((a, b) => b.title.localeCompare(a.title))
-        break
-      case "price-asc":
-        filtered.sort((a, b) => a.price - b.price)
-        break
-      case "price-desc":
-        filtered.sort((a, b) => b.price - a.price)
-        break
-    }
+  const addToCart = (produto: Produto) => {
+    const updatedCart = [...cart, produto];
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+  };
 
-    setFilteredData(filtered)
-  }, [search, sortOption, data])
+  const removeFromCart = (id: number) => {
+    const updatedCart = cart.filter((p) => p.id !== id);
+    setCart(updatedCart);
+    localStorage.setItem("cart", JSON.stringify(updatedCart));
+  };
 
-  if (isLoading) return <p>A carregar...</p>
-  if (error) return <p>Erro ao carregar produtos</p>
+  const total = cart.reduce(
+    (sum, produto) => sum + Number(produto.price),
+    0
+    
+  );
+
+  
+
+  if (!data) return <p>A carregar...</p>;
+
 
   return (
-    <div className="p-6">
-      {/* Input + Select */}
-      <div className="flex gap-4 mb-6">
-        <input
-          type="text"
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="Pesquisar produtos..."
-          className="p-2 border rounded"
-        />
+   <div className="p-5 grid grid-cols-3 gap-8">
+      {/* LISTA DE PRODUTOS */}
+      <div className="col-span-2">
+        <h1 className="text-2xl font-bold mb-4">Produtos</h1>
 
-        <select
-          value={sortOption}
-          onChange={(e) => setSortOption(e.target.value)}
-          className="p-2 border rounded"
-        >
-          <option value="">Ordenar por</option>
-          <option value="name-asc">Crescente</option>
-          <option value="name-desc">Decrescente</option>
-          
-        </select>
+        <div className="grid grid-cols-3 gap-4">
+          {data.map((p) => (
+            <ProdutoCard
+              key={p.id}
+              produto={p}
+              onAdd={addToCart}
+            />
+          ))}
+        </div>
       </div>
 
-      {/* Produtos */}
-      <div className="grid grid-cols-3 gap-6">
-        {filteredData.map((product) => (
-          <ProdutoCard key={product.id} produto={product} />
-        ))}
+      {/* CARRINHO */}
+      <div className="border p-4 rounded-xl">
+        <h2 className="text-xl font-bold mb-4">Carrinho</h2>
+
+        {cart.length === 0 && <p>Carrinho vazio</p>}
+
+        <div className="flex flex-col gap-4">
+          {cart.map((p) => (
+            <ProdutoCard
+              key={p.id}
+              produto={p}
+              isInCart
+              onRemove={removeFromCart}
+            />
+          ))}
+        </div>
+
+        <p className="mt-4 font-bold text-lg">
+          Total: {total.toFixed(2)} €
+        </p>
       </div>
     </div>
-  )
+  );
 }
+

@@ -5,11 +5,19 @@ import { Produto } from "@/models/interfaces";
 
 interface Props {
     produto: Produto;
+   onAdd?: (produto: Produto) => void;
+  onRemove?: (id: number) => void;
+  isInCart?: boolean;
 }
 
-export default function ProdutoCard({ produto }: Props) {
+export default function ProdutoCard({
+  produto,
+  onAdd,
+  onRemove,
+  isInCart = false,
+}: Props) 
 
-    // TEMPLATE STRING CORRETA
+  {
     const imageUrl = `https://deisishop.pythonanywhere.com${produto.image}`;
 
     return (
@@ -26,11 +34,32 @@ export default function ProdutoCard({ produto }: Props) {
 
             <p className="text-blue-600 font-bold">{produto.price} €</p>
 
+
+            {!isInCart && onAdd && (
+        <button
+          onClick={() => onAdd(produto)}
+          className="bg-green-600 text-white py-1 rounded"
+        >
+          Adicionar ao carrinho
+        </button>
+      )}
+
+      {isInCart && onRemove && (
+        <button
+          onClick={() => onRemove(produto.id)}
+          className="bg-red-600 text-white py-1 rounded"
+        >
+          Remover
+        </button>
+      )}
+
+
 <link
 href={`/produtos/${produto.id}`}
 className="bg-blue-600 text-white py-2 px-3 rounded text-center hover:bg-blue-700">
   
 </link>
+
         </div>
     );
 }
